@@ -1,0 +1,255 @@
+def obter_idade():
+    while True:
+        try:
+            idade = int(input("Digite a idade: "))
+            if idade >= 0:
+                return idade
+            print("A idade não pode ser negativa.")
+        except ValueError:
+            print("Digite uma idade válida usando números inteiros.")
+
+
+def obter_distancia():
+    while True:
+        distancia = input("Escolha a distância (5 ou 10 km): ").strip()
+        if distancia in ("5", "10"):
+            return int(distancia)
+        print("Distância inválida! Digite 5 ou 10.")
+
+
+def obter_lote():
+    while True:
+        lote = input("Escolha o lote (1 ou 2): ").strip()
+        if lote in ("1", "2"):
+            return int(lote)
+        print("Lote inválido! Digite 1 ou 2.")
+
+
+def calcular_valor_inscricao(idade, distancia, lote):
+    valor = 80 if lote == 1 else 100
+
+    if distancia == 10:
+        valor += 20
+
+    if idade >= 60:
+        valor /= 2
+
+    return valor
+
+
+def obter_categoria(idade):
+    if 16 <= idade <= 19:
+        return "Juvenil"
+    elif 20 <= idade <= 39:
+        return "Adulto"
+    elif 40 <= idade <= 59:
+        return "Master"
+    elif idade >= 60:
+        return "Veterano"
+    else:
+        return "Não elegível"
+
+
+def gerar_codigo(nome, idade):
+    partes = nome.strip().split()
+
+    primeiro_nome = partes[0]
+    ultimo_sobrenome = partes[-1]
+
+    codigo = (
+        primeiro_nome[:3] +
+        ultimo_sobrenome[:3] +
+        str(idade)
+    )
+
+    return codigo.upper()
+
+
+def obter_primeiro_nome(nome):
+    nome = nome.strip()
+    posicao = nome.find(" ")
+
+    if posicao == -1:
+        return nome
+
+    return nome[:posicao]
+
+
+def converter_tempo(tempo):
+    if len(tempo) != 8:
+        return None
+
+    if tempo[2] != ":" or tempo[5] != ":":
+        return None
+
+    horas_texto = tempo[:2]
+    minutos_texto = tempo[3:5]
+    segundos_texto = tempo[6:8]
+
+    if not (
+        horas_texto.isdigit()
+        and minutos_texto.isdigit()
+        and segundos_texto.isdigit()
+    ):
+        return None
+
+    horas = int(horas_texto)
+    minutos = int(minutos_texto)
+    segundos = int(segundos_texto)
+
+    if minutos > 59 or segundos > 59:
+        return None
+
+    return horas * 3600 + minutos * 60 + segundos
+
+
+def obter_tempo():
+    while True:
+        tempo = input("Digite o tempo (HH:MM:SS): ").strip()
+        segundos = converter_tempo(tempo)
+
+        if segundos is not None:
+            return tempo, segundos
+
+        print("Tempo inválido! Use o formato HH:MM:SS.")
+        print("Exemplo: 00:21:30")
+
+
+def calcular_pace(segundos_totais, distancia):
+    segundos_por_km = segundos_totais // distancia
+    minutos = segundos_por_km // 60
+    segundos = segundos_por_km % 60
+
+    return f"{minutos}'{segundos:02d}\"/km"
+
+
+def verificar_premiacao(idade, distancia, tempo_segundos):
+    categoria = obter_categoria(idade)
+
+    limites = {
+        "Juvenil": {5: 25 * 60, 10: 52 * 60},
+        "Adulto": {5: 22 * 60, 10: 46 * 60},
+        "Master": {5: 25 * 60, 10: 52 * 60},
+        "Veterano": {5: 30 * 60, 10: 63 * 60}
+    }
+
+    limite = limites[categoria][distancia]
+
+    return tempo_segundos <= limite
+
+
+def fazer_inscricao():
+    nome = input("Digite o nome completo: ").strip()
+
+    while not nome:
+        print("O nome não pode ficar vazio.")
+        nome = input("Digite o nome completo: ").strip()
+
+    idade = obter_idade()
+
+    if idade < 16:
+        print("\nInscrição recusada: idade mínima de 16 anos.")
+        return None
+
+    distancia = obter_distancia()
+    lote = obter_lote()
+
+    categoria = obter_categoria(idade)
+    codigo = gerar_codigo(nome, idade)
+    primeiro_nome = obter_primeiro_nome(nome)
+    valor = calcular_valor_inscricao(idade, distancia, lote)
+
+    print("\n== COMPROVANTE DE INSCRIÇÃO ==")
+    print(f"Nome: {primeiro_nome}")
+    print(f"Código: {codigo}")
+    print(f"Categoria: {categoria}")
+    print(f"Distância: {distancia} km")
+    print(f"Valor a pagar: R$ {valor:.2f}")
+    print("==")
+
+    return {
+        "nome": nome,
+        "idade": idade,
+        "distancia": distancia,
+        "lote": lote,
+        "codigo": codigo,
+        "categoria": categoria,
+        "valor": valor
+    }
+
+
+def calcular_resultado():
+    idade = obter_idade()
+
+    if idade < 16:
+        print("Idade abaixo da mínima para participar da corrida.")
+        return
+
+    distancia = obter_distancia()
+    tempo_texto, tempo_segundos = obter_tempo()
+
+    categoria = obter_categoria(idade)
+    pace = calcular_pace(tempo_segundos, distancia)
+    premiado = verificar_premiacao(
+        idade, distancia, tempo_segundos
+    )
+
+    print("\n== RESULTADO DA PROVA ==")
+    print(f"Categoria: {categoria}")
+    print(f"Distância: {distancia} km")
+    print(f"Tempo: {tempo_texto}")
+    print(f"Tempo em segundos: {tempo_segundos}")
+    print(f"Pace: {pace}")
+
+    if premiado:
+        print("Premiado: Sim")
+    else:
+        print("Premiado: Não")
+
+    print("==")
+
+
+def obter_opcao_menu():
+    while True:
+        opcao = input(
+            "\n1 - Fazer inscrição\n"
+            "2 - Calcular resultado\n"
+            "3 - Sair\n"
+            "Escolha uma opção: "
+        ).strip()
+
+        if opcao in ("1", "2", "3"):
+            return opcao
+
+        print("Opção inválida! Escolha 1, 2 ou 3.")
+
+
+def main():
+    """Executa o menu e mantém o resumo financeiro da sessão."""
+    quantidade_inscricoes = 0
+    total_arrecadado = 0.0
+
+    while True:
+        opcao = obter_opcao_menu()
+
+        if opcao == "1":
+            inscricao = fazer_inscricao()
+
+            if inscricao is not None:
+                quantidade_inscricoes += 1
+                total_arrecadado += inscricao["valor"]
+
+        elif opcao == "2":
+            calcular_resultado()
+
+        elif opcao == "3":
+            print("\== RESUMO DA SESSÃO ==")
+            print(f"Inscrições realizadas: {quantidade_inscricoes}")
+            print(f"Total arrecadado: R$ {total_arrecadado:.2f}")
+            print("Sistema encerrado. Até a próxima!")
+            print("==")
+            break
+
+
+main()
+       
