@@ -151,5 +151,68 @@ def realizar_inscrição():
 
     return codigo
 
+def calcular_resultado():
+    idade = obter_idade()
 
-    
+    if idade < 16:
+        print("Idade abaixo da mínima para participar da corrida.")
+        return
+
+    distancia = obter_distancia()
+    tempo_segundos = receber_tempo()
+
+    categoria = obter_categoria(idade)
+    pace = calcular_pace(tempo_segundos, distancia)
+
+    premiado = verificar_premiacao(
+        categoria, distancia, tempo_segundos
+    )
+
+    print("\n== RESULTADO DA PROVA ==")
+    print(f"Categoria: {categoria}")
+    print(f"Distância: {distancia} km")
+    print(f"Tempo em segundos: {tempo_segundos}")
+    print(f"Pace: {pace}")
+
+    if premiado:
+        print("Premiado: Sim")
+    else:
+        print("Premiado: Não")
+
+    print("==")
+
+
+def obter_opcao_menu():
+    while True:
+        opcao = input(
+            "\n1 - Fazer inscrição\n"
+            "2 - Calcular resultado\n"
+            "3 - Sair\n"
+            "Escolha uma opção: "
+        ).strip()
+
+        if opcao in ("1", "2", "3"):
+            return opcao
+
+        print("Opção inválida! Escolha 1, 2 ou 3.")
+
+def main():
+    quantidade_incritos = 0
+    valor_arrecadado = 0.0
+
+    while True:
+      opcao = obter_opcao_menu()
+
+      if opcao == "1":
+        inscricao = realizar_inscrição()
+
+      elif opcao == "2":
+        calcular_resultado()
+
+      elif opcao == "3":
+        print(f"total de inscrições: {quantidade_incritos}")    
+        print(f"total arrecadado: {valor_arrecadado}")
+        print("Sistema encerrado")
+        break
+     
+main()
