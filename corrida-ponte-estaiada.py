@@ -1,3 +1,12 @@
+CATEGORIAS = (
+    ("Juvenil", 16, 19, 25 * 60, 52 * 60),
+    ("Adulto", 20, 39, 22 * 60, 46 * 60),
+    ("Master", 40, 59, 25 * 60, 52 * 60),
+    ("Veterano", 60, 150, 30 * 60, 63 * 60)
+)
+
+#ENTRADA DE INFORMAÇOES
+
 def obter_idade():
     while True:
         try:
@@ -15,23 +24,12 @@ def obter_distancia():
             return int(distancia)
         print("Distância inválida! Digite 5 ou 10.")
 
-
 def obter_lote():
     while True:
         lote = input("Escolha o lote (1 ou 2): ").strip()
         if lote in ("1", "2"):
             return int(lote)
         print("Lote inválido! Digite 1 ou 2.")
-
-def calcular_valor_inscricao(idade, distancia, lote):
-    valor = 80 if lote == 1 else 100
-
-    if distancia == 10:
-        valor += 20
-    if idade >= 60:
-        valor /= 2
-
-    return valor
 
 def obter_categoria(idade):
     if 16 <= idade <= 19:
@@ -45,6 +43,33 @@ def obter_categoria(idade):
     else:
         return "Inválido"
 
+def obter_primeiro_nome(nome):
+    nome = nome.strip()
+    posicao = nome.find(" ")
+    if posicao == -1:
+        return nome
+    return nome[:posicao]
+
+def receber_tempo():
+    while True:
+        tempo = input("DIgite o tempo desta maneira (HH:MM:SS): ").strip()
+        segundos = tempo_em_segundos(tempo)
+        if segundos:
+            return segundos
+        print("Digite desta maneira (HH:MM:SS)")
+
+#REGRAS DE NEGÓCIO
+
+def calcular_valor_inscricao(idade, distancia, lote):
+    valor = 80 if lote == 1 else 100
+
+    if distancia == 10:
+        valor += 20
+    if idade >= 60:
+        valor /= 2
+
+    return valor
+
 def gerar_codigo(nome, idade):
     partes = nome.strip().split()
     primeiro_nome = partes[0]
@@ -57,13 +82,6 @@ def gerar_codigo(nome, idade):
     )
     return codigo.upper()
 
-def obter_primeiro_nome(nome):
-    nome = nome.strip()
-    posicao = nome.find(" ")
-    if posicao == -1:
-        return nome
-    return nome[:posicao]
-
 def tempo_em_segundos(tempo):
     partes = tempo.split(":")
     if tempo.count(":") != 2:
@@ -75,18 +93,8 @@ def tempo_em_segundos(tempo):
 
     if minutos > 59 or segundos > 59:
         return None
-
     total = horas * 3600 + minutos * 60 + segundos
     return total
-
-def receber_tempo():
-    while True:
-        tempo = input("DIgite o tempo desta maneira (HH:MM:SS): ").strip()
-        segundos = tempo_em_segundos(tempo)
-        if segundos:
-            return segundos
-        print("Digite desta maneira (HH:MM:SS)")
-
 
 def calcular_pace(segundos, distancia):
     segundos_km = segundos // distancia
@@ -181,7 +189,6 @@ def calcular_resultado():
 
     print("==")
 
-
 def obter_opcao_menu():
     while True:
         opcao = input(
@@ -216,3 +223,18 @@ def main():
         break
      
 main()
+
+def listar_categorias(corredores):
+    contagem = {
+        "Juvenil": 0,
+        "Adulto": 0,
+        "Master": 0,
+        "Veterano": 0
+    }
+    for corredor in corredores:
+        categoria = corredor["categoria"]
+        contagem[categoria] += 1
+
+    print(" INSCRITOS POR CATEGORIA ")
+    for categoria, quantidade in contagem.items():
+        print(f"{categoria}: {quantidade}")
