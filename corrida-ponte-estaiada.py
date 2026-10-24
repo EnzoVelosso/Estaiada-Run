@@ -41,7 +41,7 @@ def receber_tempo():
         print("Digite desta maneira (HH:MM:SS)")
 
 def obter_opcao_menu():
-    print("\n1 - Fazer inscrição")
+    print("1 - Fazer inscrição")
     print("2 - Buscar corredor pelo código")
     print("3 - Registrar tempo de prova")
     print("4 - Quantidade por categoria")
@@ -59,11 +59,10 @@ def obter_opcao_menu():
 
 # REGRAS DE NEGÓCIO
 
-def obter_categoria(idade):
+def identificar_categoria(idade):
     for categoria, idade_minima, idade_maxima, limite_5km, limite_10km in CATEGORIAS:
         if idade_minima <= idade <= idade_maxima:
             return categoria
-
     return "Inválido"
 
 def obter_primeiro_nome(nome):
@@ -80,7 +79,6 @@ def calcular_valor_inscricao(idade, distancia, lote):
         valor += 20
     if idade >= 60:
         valor /= 2
-
     return valor
 
 def gerar_codigo(nome, idade):
@@ -88,12 +86,9 @@ def gerar_codigo(nome, idade):
     primeiro_nome = partes[0]
     ultimo_sobrenome = partes[-1]
 
-    codigo = (
-        primeiro_nome[:3] +
-        ultimo_sobrenome[:3] +
-        str(idade)
-    )
+    codigo = (primeiro_nome[:3] + ultimo_sobrenome[:3] + str(idade))
     return codigo.upper()
+
 def converter_segundos_tempo(segundos):
     minutos_totais = segundos // 60
 
@@ -104,18 +99,31 @@ def converter_segundos_tempo(segundos):
     return f"{horas:02d}:{minutos:02d}:{segundos_restantes:02d}"
 
 def tempo_em_segundos(tempo):
-    partes = tempo.split(":")
-    if tempo.count(":") != 2:
+    if tempo[2:3] != ":" or tempo[5:6] != ":":
         return None
+    if tempo[7:8] == "" or tempo[8:] != "":
+        return None
+    horas_texto = tempo[:2]
+    minutos_texto = tempo[3:5]
+    segundos_texto = tempo[6:8]
 
-    horas = int(partes[0])
-    minutos = int(partes[1])
-    segundos = int(partes[2])
+    numeros = "0123456789"
 
+    for caractere in horas_texto + minutos_texto + segundos_texto:
+        if caractere not in numeros:
+            return None
+    horas = int(horas_texto)
+    minutos = int(minutos_texto)
+    segundos = int(segundos_texto)
     if minutos > 59 or segundos > 59:
         return None
-    total = horas * 3600 + minutos * 60 + segundos
-    return total
+    return horas * 3600 + minutos * 60 + segundos
+
+def formatar_tempo(segundos):
+    horas = segundos // 3600
+    minutos = (segundos % 3600) // 60
+    resto = segundos % 60
+    return f"{horas:02d}:{minutos:02d}:{resto:02d}"
 
 def calcular_pace(segundos, distancia):
     segundos_km = segundos // distancia
@@ -148,6 +156,120 @@ def verificar_premiacao(categoria, distancia, segundos):
              valor_maximo = 63 * 60
     return segundos <= valor_maximo
 
+# DADOS DE CORREDORES 
+
+def encontrar_corredor(corredores, codigo):
+    codigo = codigo.strip().upper()
+    encontrado = None
+
+    for corredor in corredores:
+        if corredor["codigo"] == codigo:
+            encontrado = corredor
+            break
+    return encontrado
+
+def exibir_corredor(corredor):
+    print(f"Nome: {corredor['nome']}")
+    print(f"Idade: {corredor['idade']}")
+    print(f"Categoria: {corredor['categoria']}")
+    print(f"Distância: {corredor['distancia']} km")
+    print(f"Lote: {corredor['lote']}")
+    print(f"Código: {corredor['codigo']}")
+    print(f"Valor: R$ {corredor['valor']:.2f}")
+
+    if corredor["tempo"] is None:
+        print("Tempo: ainda não registrado")
+        return
+
+    tempo = corredor["tempo"]
+    pace = calcular_pace(tempo, corredor["distancia"])
+    premiado = verificar_premiacao(corredor["categoria"], corredor["distancia"],tempo)
+
+    print(f"Tempo: {converter_segundos_tempo(tempo)} ({tempo} segundos)")
+    print(f"Pace: {pace}/km")
+    print(f"Premiado: {'Sim' if premiado else 'Não'}")
+
+def buscar_corredor_por_codigo(corredores, codigo):
+    for corredor in corredores:
+        if corredor["codigo"] == codigo.strip().upper():
+            return corredor
+
+def buscar_corredor(corredores):
+    codigo = input("Digite o código do corredor: ").strip().upper()
+    corredor = buscar_corredor_por_codigo(corredores, codigo)
+
+    if corredor is None:
+        print("Nenhum corredor encontrado com esse código.")
+        return
+    print("Corredor encontrado")
+    exibir_corredor(corredor)
+
+def listar_inscritos(corredores):
+    if not corredores:
+        print("Ainda não existem corredores inscritos.")
+        return
+
+    print("\n== LISTA DE INSCRITOS ==")
+
+    for corredor in corredores:
+        print("\n-------------------------")
+        exibir_corredor(corredor)
+
+# FUNCIONALIDADES DA CORRIDA 
+
+def realizar_inscrição(corredores):
+    nome = input("Digite seu nome completo: ").strip()
+    while not nome:
+        print("Nome vazio!")
+        nome = input("Digite seu nome completo: ").strip()
+
+    idade = obter_idade()
+    if idade < 16:
+        print("Idade mínima de 16 anos!")
+        return
+
+    distancia = obter_distancia()
+    lote = obter_lote()
+
+    categoria = identificar_categoria(idade)
+    codigo = gerar_codigo(nome, idade)
+    valor = calcular_valor_inscricao(idade, distancia, lote)
+
+    # Cada corredor é armazenado em um dicionário.
+    corredor = {
+        "nome": nome,
+        "idade": idade,
+        "categoria": categoria,
+        "distancia": distancia,
+        "lote": lote,
+        "codigo": codigo,
+        "valor": valor,
+        "tempo": None}
+    
+    # O dicionário é adicionado à lista de corredores.
+    corredores.append(corredor)
+    print("\n== DADOS DA INSCRIÇÃO ==")
+    print(f"Nome: {obter_primeiro_nome(nome)}")
+    print(f"Código: {codigo}")
+    print(f"Categoria: {categoria}")
+    print(f"Distância: {distancia} km")
+    print(f"Lote: {lote}")
+    print(f"Valor a pagar: R$ {valor:.2f}")
+    print("Inscrição realizada com sucesso!")
+
+def registrar_tempo(corredores):
+    print("--- Registrar tempo de prova ---")
+    codigo = input("Digite o código do corredor: ").strip().upper()
+    corredor = buscar_corredor_por_codigo(corredores, codigo)
+    if corredor is None:
+        print("Código não encontrado. Cadastre o corredor.")
+        return
+    
+    tempo_segundos = receber_tempo()
+    corredor["tempo"] = tempo_segundos
+    print("Tempo registrado!")
+    exibir_corredor(corredor)
+
 def quantidade_por_categoria(corredores):
     quantidades = {}
 
@@ -174,62 +296,6 @@ def listar_categorias(corredores):
     for categoria, quantidade in contagem.items():
         print(f"{categoria}: {quantidade}")
 
-def buscar_corredor_por_codigo(corredores, codigo):
-    for corredor in corredores:
-        if corredor["codigo"] == codigo.strip().upper():
-            return corredor
-
-    return None
-
-def exibir_corredor(corredor):
-    print(f"Nome: {corredor['nome']}")
-    print(f"Idade: {corredor['idade']}")
-    print(f"Categoria: {corredor['categoria']}")
-    print(f"Distância: {corredor['distancia']} km")
-    print(f"Lote: {corredor['lote']}")
-    print(f"Código: {corredor['codigo']}")
-    print(f"Valor: R$ {corredor['valor']:.2f}")
-
-    if corredor["tempo"] is None:
-        print("Tempo: ainda não registrado")
-        return
-
-    tempo = corredor["tempo"]
-    pace = calcular_pace(tempo, corredor["distancia"])
-
-    premiado = verificar_premiacao(
-        corredor["categoria"],
-        corredor["distancia"],
-        tempo
-    )
-
-    print(f"Tempo: {converter_segundos_tempo(tempo)} ({tempo} segundos)")
-    print(f"Pace: {pace}/km")
-    print(f"Premiado: {'Sim' if premiado else 'Não'}")
-
-def buscar_corredor(corredores):
-    codigo = input("Digite o código do corredor: ").strip().upper()
-    corredor = buscar_corredor_por_codigo(corredores, codigo)
-
-    if corredor is None:
-        print("Nenhum corredor encontrado com esse código.")
-        return
-    print("Corredor encontrado")
-    exibir_corredor(corredor)
-
-def registrar_tempo(corredores):
-    print("--- Registrar tempo de prova ---")
-    codigo = input("Digite o código do corredor: ").strip().upper()
-    corredor = buscar_corredor_por_codigo(corredores, codigo)
-    if corredor is None:
-        print("Código não encontrado. Cadastre o corredor.")
-        return
-
-    tempo_segundos = receber_tempo()
-    corredor["tempo"] = tempo_segundos
-    print("Tempo registrado!")
-    exibir_corredor(corredor)
-
 def exibir_quantidade_por_categoria(corredores):
     quantidades = quantidade_por_categoria(corredores)
 
@@ -237,34 +303,6 @@ def exibir_quantidade_por_categoria(corredores):
     for categoria, quantidade in quantidades.items():
         print(f"{categoria}: {quantidade}")
 
-def realizar_inscrição():
-    nome = input("Digite seu nome completo: ").strip()
-    while not nome:
-        print("Nome vazio!")
-        nome = input("Digite seu nome completo: ").strip()
-
-    idade = obter_idade()
-
-    if idade < 16:
-        print("Idade mínima de 16 anos!")
-        return None
-
-    distancia = obter_distancia()
-    lote = obter_lote()
-
-    categoria = obter_categoria(idade)
-    codigo = gerar_codigo(nome, idade)
-    primeiro_nome = obter_primeiro_nome(nome)
-    valor = calcular_valor_inscricao(idade, distancia, lote)
-
-    print("== Dados da Inscrição ==")
-    print(f"Nome: {primeiro_nome}")
-    print(f"Código: {codigo}")
-    print(f"Categoria: {categoria}")
-    print(f"Distância: {distancia} km")
-    print(f"Valor a pagar: R$ {valor:.2f}")
-
-    return codigo
 
 def calcular_resultado():
     idade = obter_idade()
@@ -276,7 +314,7 @@ def calcular_resultado():
     distancia = obter_distancia()
     tempo_segundos = receber_tempo()
 
-    categoria = obter_categoria(idade)
+    categoria = identificar_categoria(idade)
     pace = calcular_pace(tempo_segundos, distancia)
 
     premiado = verificar_premiacao(
