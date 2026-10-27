@@ -217,7 +217,7 @@ def listar_inscritos(corredores):
 
 # FUNCIONALIDADES DA CORRIDA 
 
-def realizar_inscrição(corredores):
+def realizar_inscrição(corredores, codigo_usado):
     nome = input("Digite seu nome completo: ").strip()
     while not nome:
         print("Nome vazio!")
@@ -275,11 +275,16 @@ def quantidade_por_categoria(corredores):
 
     for categoria, idade_minima, idade_maxima, limite_5km, limite_10km in CATEGORIAS:
         quantidades[categoria] = 0
-
     for corredor in corredores:
         quantidades[corredor["categoria"]] += 1
-
     return quantidades
+
+def exibir_quantidade_por_categoria(corredores):
+    quantidades = quantidade_por_categoria(corredores)
+
+    print("--- Inscritos por categoria ---")
+    for categoria, quantidade in quantidades.items():
+        print(f"{categoria}: {quantidade}")
 
 def listar_categorias(corredores):
     contagem = {
@@ -295,14 +300,6 @@ def listar_categorias(corredores):
     print(" INSCRITOS POR CATEGORIA ")
     for categoria, quantidade in contagem.items():
         print(f"{categoria}: {quantidade}")
-
-def exibir_quantidade_por_categoria(corredores):
-    quantidades = quantidade_por_categoria(corredores)
-
-    print("\n--- Inscritos por categoria ---")
-    for categoria, quantidade in quantidades.items():
-        print(f"{categoria}: {quantidade}")
-
 
 def calcular_resultado():
     idade = obter_idade()
@@ -332,25 +329,41 @@ def calcular_resultado():
     else:
         print("Premiado: Não")
 
-    print("==")
+
+ # MENU PRINCIPAL
+
 
 def main():
-    quantidade_incritos = 0
-    valor_arrecadado = 0.0
-
-    while True:
+    corredores = []
+    codigo_usados = set()
+    while True :
       opcao = obter_opcao_menu()
 
-      if opcao == "1":
-        inscricao = realizar_inscrição()
+      if opcao == "1" :
+        realizar_inscrição(corredores, codigo_usados)
 
-      elif opcao == "2":
+      elif opcao == "2" :
+        buscar_corredor(corredores)
+
+      elif opcao == "3" :
+        registrar_tempo(corredores)
+
+      elif opcao == "4" :
+        exibir_quantidade_por_categoria(corredores)
+        
+      elif opcao == "5":
+        listar_inscritos(corredores)
+        
+      elif opcao == "6":
         calcular_resultado()
+        
+      elif opcao == "7":
+        total_inscritos = len(corredores)
+        total_arrecadado = sum(corredor["valor"] for corredor in corredores)
 
-      elif opcao == "3":
-        print(f"total de inscrições: {quantidade_incritos}")    
-        print(f"total arrecadado: {valor_arrecadado}")
-        print("Sistema encerrado")
+        print(f"Total de inscrições: {total_inscritos}")
+        print(f"Total arrecadado: R$ {total_arrecadado:.2f}")
+        print("Sistema encerrado.")
         break
      
 main()
