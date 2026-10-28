@@ -81,7 +81,7 @@ def obter_opcao_menu():
 def identificar_categoria(idade):
     """Retorna a categoria da idade ou Inválido quando não existe categoria."""
     for categoria, idade_minima, idade_maxima, limite_5km, limite_10km in CATEGORIAS:
-        if idade_minima <= idade <= idade_maxima:
+        if idade >= idade_minima and (idade_maxima is None or idade <= idade_maxima):
             return categoria
     return "Inválido"
 
@@ -303,15 +303,10 @@ def listar_inscritos(corredores):
 
 def realizar_inscrição(corredores, codigo_usado):
     """Cadastra um corredor, calcula o valor e guarda seus dados na lista."""
-    nome = input("Digite seu nome completo: ").strip()
-    while not nome:
-        print("Nome vazio!")
-        nome = input("Digite seu nome completo: ").strip()
+    nome = obter_nome_completo()
     #O cadastro é recusado abaixo de 16.
     idade = obter_idade()
-    if idade < 16:
-        print("Idade mínima de 16 anos!")
-        return
+
 
     distancia = obter_distancia()
     lote = obter_lote()
@@ -471,13 +466,13 @@ def main():
         registrar_tempo(corredores)
 
       elif opcao == "4" :
-        quantidade_por_categoria(corredores)
+        exibir_quantidade_por_categoria(corredores)
         
       elif opcao == "5":
         listar_inscritos(corredores)
         
       elif opcao == "6":
-        calcular_resultado()
+        calcular_resultado(corredores)
         
       elif opcao == "7":
          # Os totais são acumulados no programa principal, conforme o enunciado.
